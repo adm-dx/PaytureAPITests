@@ -40,6 +40,7 @@ public class PaytureAPIBlockRequestTests {
             "OrderId=" + orderID + ";Amount=" + AMOUNT_VALUE);
     String payInfoWithoutYearValue = encodeValue("PAN=4111111111111112;EMonth=12;CardHolder=Roman Miller;SecureCode=123;" +
             "OrderId=" + orderID + ";Amount=" + AMOUNT_VALUE);
+    String payInfoWithoutAmountAndOrderIdValue = encodeValue("PAN=4111111111111112;EMonth=12;CardHolder=Roman Miller;SecureCode=123;");
 
     public static String orderIDBuilder() {
         //60f02253-bea1-2563-d432-961f0ace9c943
@@ -266,5 +267,30 @@ public class PaytureAPIBlockRequestTests {
                 .body(containsString("OrderId=\"" + orderID + "\""))
                 .and()
                 .body(containsString(ERROR_CODE_CARD_EXPIRED));
+    }
+
+    @Test
+    @Description("Отправить GET запрос с корректно заполненными обязательными полями (Key, Amount, OrderId). В PayInfo удалить параметр и значение Amount, OrderId")
+    //Test Fail, сейчас можно передавать PayInfo без обязательных параметров OrderId и Amount
+    public void test_sendRequestPayInfoWithoutAmountAndOrderId() {
+        given().
+                queryParam(KEY_NAME, KEY_VALUE).
+                queryParam(AMOUNT_NAME, AMOUNT_VALUE).
+                queryParam(ORDER_ID_NAME, orderID).
+                queryParam(PAY_INFO_NAME, payInfoWithoutAmountAndOrderIdValue).
+                when().
+                get(BASE_URL).
+                then().
+                log().all().
+                assertThat()
+                .statusCode(200)
+                .and()
+                .body(containsString("Block"))
+                .and()
+                .body(containsString(SUCCESS_CODE_FALSE))
+                .and()
+                .body(containsString("OrderId=\"" + orderID + "\""))
+                .and()
+                .body(containsString(ERROR_CODE_WRONG_PARAMS));
     }
 }
